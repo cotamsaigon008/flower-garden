@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Fraunces, Inter, IBM_Plex_Mono } from 'next/font/google';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -112,9 +112,31 @@ const jobs = [
 
 function fmt(n) { return n.toLocaleString('vi-VN'); }
 
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia(query).matches;
+  });
+
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const handler = (e) => setMatches(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, [query]);
+
+  return matches;
+}
+
+function useResponsive() {
+  const mobile = useMediaQuery('(max-width: 768px)');
+  const tablet = useMediaQuery('(max-width: 1024px)');
+  return { mobile, tablet };
+}
+
 function KpiCard({ icon: Icon, label, value, sub, accent }) {
   return (
-    <div style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 10, padding: '18px 20px', flex: 1, minWidth: 180 }}>
+    <div style={{ background: C.panel, border: `1px solid ${C.line}`, borderRadius: 10, padding: '14px 16px', flex: 1, flexBasis: 220, minWidth: 180 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
         <Icon size={15} color={accent || C.gold} />
         <span style={{ fontFamily: fontBody, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.sub }}>{label}</span>
@@ -171,9 +193,9 @@ function ProgressBar({ value, label, color }) {
   );
 }
 
-function ExecutiveTab({ alertData, marketShareData, dataError }) {
+function ExecutiveTab({ alertData, marketShareData, dataError, mobile }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 20 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1.6fr 1fr', gap: mobile ? 16 : 20 }}>
       <div>
         <SectionTitle icon={Radio}>Real-Time System Alerts (Job 1)</SectionTitle>
         {dataError && (<div style={{ fontFamily: fontBody, fontSize: 12.5, color: C.red, marginBottom: 12 }}>Không tải được dữ liệu từ Supabase ({dataError}). Kiểm tra biến môi trường NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY trên Vercel.</div>)}
@@ -212,10 +234,10 @@ function ExecutiveTab({ alertData, marketShareData, dataError }) {
   );
 }
 
-function PricingTab() {
+function PricingTab({ mobile }) {
   const tiers = ['Premium', 'Super-Premium'];
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 20 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1.3fr 1fr', gap: mobile ? 16 :  20 }}>
       <div>
         <SectionTitle icon={DollarSign}>Ma Trận SKU Giá Thị Trường Động — WinMart</SectionTitle>
         <Panel style={{ padding: 0, overflow: 'hidden' }}>
@@ -256,9 +278,9 @@ function PricingTab() {
   );
 }
 
-function DistributionTab() {
+function DistributionTab({ mobile }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr 1fr', gap: mobile ? 16 : 20 }}>
       {regions.map((r, i) => (
         <div key={i}>
           <SectionTitle icon={MapPin}>{r.name}</SectionTitle>
@@ -291,9 +313,9 @@ function DistributionTab() {
   );
 }
 
-function ForecastTab() {
+function ForecastTab({ mobile }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 20 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1.4fr 1fr', gap: mobile ? 16 : 20 }}>
       <div>
         <SectionTitle icon={TrendingDown}>Dự Báo Sản Lượng 30-90-180 Ngày (Chỉ Số Nền = 100)</SectionTitle>
         <Panel>
@@ -359,6 +381,7 @@ export default function BeerFmcgIntelligenceOS({
   initialAlerts = [], initialMarketShare = [], initialFinancials = [], dataError = null,
 }) {
   const [activeTab, setActiveTab] = useState('executive');
+  const { mobile } = useResponsive();
   const alertData = initialAlerts.map(mapAlertRow);
   const marketShareData = initialMarketShare.map(mapBrandRow);
   const financials = initialFinancials.map(mapFinancialRow);
@@ -366,8 +389,8 @@ export default function BeerFmcgIntelligenceOS({
   const anyQ1Only = financialsLatest.some(f => f.period === 'Q1/2026');
 
   return (
-    <div className={`${fraunces.variable} ${inter.variable} ${plexMono.variable}`} style={{ background: C.bg, minHeight: '100vh', padding: '28px 32px', fontFamily: fontBody, color: C.ink }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: `1px solid ${C.line}`, paddingBottom: 18, marginBottom: 22 }}>
+    <div className={`${fraunces.variable} ${inter.variable} ${plexMono.variable}`} style={{ background: C.bg, minHeight: '100vh', padding: mobile ? '14px 16px' : '28px 32px', fontFamily: fontBody, color: C.ink }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: mobile ? 'flex-start' : 'flex-end', flexDirection: mobile ? 'column' : 'row', gap: mobile ? 8 : 0, borderBottom: `1px solid ${C.line}`, paddingBottom: mobile ? 12 : 18, marginBottom: mobile ? 16 : 22 }}>
         <div>
           <div style={{ fontFamily: fontMono, fontSize: 11, letterSpacing: '0.12em', color: C.faint, marginBottom: 6 }}>MCP AI · BEER &amp; FMCG INTELLIGENCE OS</div>
           <h1 style={{ fontFamily: fontDisplay, fontSize: 26, fontWeight: 600, margin: 0, color: C.ink }}>Hệ Thống Giám Sát &amp; Điều Hành Thương Mại</h1>
@@ -376,7 +399,7 @@ export default function BeerFmcgIntelligenceOS({
           <span style={{ width: 6, height: 6, borderRadius: 3, background: C.green }} />SYSTEM ACTIVE
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 16, marginBottom: 26, flexWrap: 'wrap' }}>
+<div style={{ display: 'flex', gap: mobile ? 10 : 16, marginBottom: mobile ? 18 : 26, flexWrap: 'wrap' }}>
         <KpiCard icon={Package} label="Sản Lượng Toàn Thị Trường" value="~4,15 tỷ lít" sub="Ước tính cả năm 2026 (VBA/Nielsen) — giảm từ ~4,6 tỷ lít các năm trước" />
         <KpiCard
           icon={DollarSign}
@@ -400,7 +423,7 @@ export default function BeerFmcgIntelligenceOS({
         />
         <KpiCard icon={Target} label="Cảnh Báo Đang Mở" value={alertData.length} sub="Impact ≥3 hoặc Urgency ≥3" accent={C.red} />
       </div>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 24, borderBottom: `1px solid ${C.line}` }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: mobile ? 16 : 24, borderBottom: `1px solid ${C.line}`, overflowX: mobile ? 'auto' : 'visible', flexWrap: 'nowrap' }}>
         {TABS.map(t => {
           const active = activeTab === t.key;
           const Icon = t.icon;
@@ -411,10 +434,10 @@ export default function BeerFmcgIntelligenceOS({
           );
         })}
       </div>
-      {activeTab === 'executive' && (<ExecutiveTab alertData={alertData} marketShareData={marketShareData} dataError={dataError} />)}
-      {activeTab === 'pricing' && <PricingTab />}
-      {activeTab === 'distribution' && <DistributionTab />}
-      {activeTab === 'forecast' && <ForecastTab />}
+      {activeTab === 'executive' && (<ExecutiveTab alertData={alertData} marketShareData={marketShareData} dataError={dataError} mobile={mobile} />)}
+      {activeTab === 'pricing' && <PricingTab mobile={mobile} />}
+      {activeTab === 'distribution' && <DistributionTab mobile={mobile} />}
+      {activeTab === 'forecast' && <ForecastTab mobile={mobile} />}
       <div style={{ marginTop: 32, paddingTop: 16, borderTop: `1px solid ${C.line}`, fontFamily: fontBody, fontSize: 11, color: C.faint, lineHeight: 1.6 }}>
         Tab Executive (cảnh báo &amp; thị phần, NSV, TTS%) đọc dữ liệu trực tiếp từ Supabase (market_alerts, market_brands, company_financials) mỗi lần tải trang.
         Các tab Pricing / Distribution / Forecast vẫn dùng dữ liệu tĩnh từ Beer &amp; FMCG Intelligence OS Blueprint. Nội dung pháp lý cập nhật đến Q3/2026

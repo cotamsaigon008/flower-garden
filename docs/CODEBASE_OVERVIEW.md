@@ -1,223 +1,278 @@
-# Khảo sát kho mã nguồn — bia_fmcg
+# Khảo sát kho mã nguồn —— bia_fmcg
 
-> **Trạng thái khảo sát:** Hoàn tất — chế độ chỉ đọc, không có sửa đổi mã nguồn nào được thực hiện. Chỉ tạo tệp tài liệu `docs/CODEBASE_OVERVIEW.md` này và tệp `AGENTS.md` được đề xuất. Không thay đổi hành vi ứng dụng.
+> **Trạng thái:** Hoàn tất —— **chế độ chỉ đọc**, không sửa đổi mã nguồn ứng dụng. Tài liệu này được tạo lại từ commit `4427f00` — "Add files via upload" — HEAD hiện tại của `main`, xác nhận qua GitHub API ngày 2026-08-31.
 
+> **Tóm tắt nhanh:** Kho chứa **Next.js 16 App Router + React 19 + Supabase** — dashboard "Beer &amp; FMCG Intelligence OS" cho ngành bia/FMCG Việt Nam. Ứng dụng có một route trang chủ, đọc dữ liệu chỉ-đọc từ Supabase ba bảng `market_alerts`, `market_brands`, `company_financials`; các tab còn lại dùng dữ liệu tĩnh hardcode. **Chưa có:** backend server, API route, server actions, database migration, xác thực, tests, CI/CD, Docker, worker thực sự trong kho.
 
-
-> **Tóm tắt ngắn:** Tại thời điểm khảo sát (2026-08-31), kho mã nguồn này **gần như trống**. Toàn bộ nội dung là một tệp `README.md` 16 byte với dòng chữ "bia-fmcg-main". Không tồn tại mã nguồn ứng dụng, tệp cấu hình, tài liệu kỹ thuật, bài kiểm thử, GitHub Actions, hay bất kỳ tệp phụ thuộc nào. Kho vừa được tạo và đẩy một commit khởi tạo duy nhất. Mọi phân tích bên dưới vì thế phản ánh *trạng thái hiện tại trống*, đồng thời liệt kê các mục "chưa biết/còn thiếu" cần được bổ sung khi mã nguồn thực sự xuất hiện trong kho.
-
-## 1. Mục đích của kho mã nguồn và các trách nhiệm nghiệp vụ/lĩnh vực (domain)
+## 1. Mục đích kho và lĩnh vực nghiệp vụ
 
 **Đã xác nhận:**
-- Tên kho: `bia_fmcg` (từ cấu hình GitHub) — mô tả `bia_fmcg`.
-- Tệp README duy nhất chứa đúng chuỗi `# bia-fmcg-main` — không có thông tin mục đích nào khác được ghi lại.
-- Không tồn tại mã thiết kế, tài liệu dự án, hoặc bất kỳ mô tả nghiệp vụ nào trong kho.
+- Tên dự án trong `package.json`: `beer-fmcg-intelligence-os`; giao diện mang nhãn **Beer &amp; FMCG Intelligence OS** — hệ thống giám sát và điều hành thương mại ngành bia và FMCG Việt Nam.
 
-**Suy luận:** Tên gợi ý liên quan lĩnh vực FMCG (Fast-Moving Consumer Goods — hàng tiêu dùng nhanh), nhưng **chưa được xác nhận** bởi bất kỳ nội dung nào trong kho.
+- Giao diện gồm các tab; **Executive** — real-time alerts, thị phần nội địa, NSV, TTS%, lịch job tự động; **Pricing** — ma trận SKU-giá WinMart, waterfall cấu trúc giá, SKU Tsingtao thử nghiệm; **Distribution** — phân khúc điểm bán ba miền, Strike Rate, Drop Size Index, RED Score; **Forecast** — dự báo 30-90-180 ngày, dịch chuyển kênh on/off-trade, khoảng trắng kệ hàng.
 
+**Suy luận:** Sản phẩm hướng tới executive và strategy intelligence cho nhà sản xuất bia, NPP và chuỗi bán lẻ như WinMart. Kịch bản tham chiếu khung pháp lý Việt Nam như Luật Thuế TTĐB `66/2025/QH15`, Nghị định `168/2024`, Luật ATGT đường bộ `2024`. **Chưa có tài liệu chính thức** về lĩnh vực hay người dùng mục tiêu trong repo vào.**
 
+## 2. Ngăn xếp công nghệ
 
-## 2. Ngăn xếp công nghệ (technology stack)
+**Đã xác nhận** — từ `package.json`, `package-lock.json`, mã nguồn:
+- `next` `16.2.10`; `react` `19.2.4`; `react-dom` `19.2.4`.
+- `typescript` `5.9.3`, `tsconfig.json` strict, `allowJs: true`.
+- `tailwindcss` `4.3.2` + `@tailwindcss/postcss` `4.3.2`; `postcss.config.mjs`.
+- `recharts` `3.9.2`; `lucide-react` `1.24.0`.
+- `@supabase/supabase-js` `^2.45.0` khai báo trong `package.json` — **không có trong `package-lock.json`**.
+- ESLint `9.39.5` + `eslint-config-next` `16.2.10`, flat config `eslint.config.mjs`.
+- Font Google qua `next/font/google`: Geist và Geist_Mono trong layout; Fraunces, Inter, IBM_Plex_Mono trong component.
 
-**Đã xác nhận:** Không có tệp khai báo công nghệ nào(chẳng hạn `package.json`, `requirements.txt`, `pyproject.toml`, `go.mod`, `pom.xml`, `Gemfile`, `composer.json`, …) trong kho. GitHub API trả về `"language": null` cho kho. Không có tệp phụ thuộc nào được commit.**
+**Ghi chú:** `package-lock.json` lockfileVersion 3, khoảng 474 entries; thiếu `@supabase/supabase-js` — lockfile lệch manifest, rủi ro khi `npm ci`.
 
-**Chưa biết:** Ngôn ngữ lập trình, framework, và công cụ dự kiến sẽ dùng cho dự án.
+**Chưa biết:** Phiên bản Node.js, npm yêu cầu — không `engines`, không `.nvmrc`.
 
+**Chưa có:** `.gitignore` — thiếu, nguy cơ commit `node_modules` và `.env`; không `.env.example`; không `LICENSE`.
 
+##3. Cấu trúc kho mã nguồn
 
-## 3. Cấu trúc kho mã nguồn
-
-**Đã xác nhận:** Toàn bộ cây tệp của nhánh `main`(theo `git ls-tree` và GitHub API `contents`) chỉ gồm:
-
+**Đã xác nhận** — toàn bộ cây tệp commit `4427f00`:
 ```
-README.md   (16 bytes, nội dung: "# bia-fmcg-main")
+bia_fmcg/
+├── README.md                  — README mặc định create-next-app + dòng "# bia-fmcg"
+├── AGENTS.md                  — cảnh báo nextjs-agent-rules
+├── CLAUDE.md                  — chỉ chứa "@AGENTS.md"
+├── package.json, package-lock.json
+├── next.config.ts              — cấu hình rỗng, không option
+├── tsconfig.json              — strict, path alias @/* → ./
+├── eslint.config.mjs          — next core-web-vitals + typescript, flat config
+├── postcss.config.mjs         — plugin tailwindcss
+├── app/
+│   ├── favicon.ico
+│   ├── globals.css           — import Tailwind v4 + biến CSS light/dark
+│   ├── layout.tsx            — RootLayout, Geist fonts, metadata mặc định, lang="en"
+│   └── page.tsx              — server component, fetch Supabase rồi render client component
+├── components/
+│   └── BeerFmcgIntelligenceOS.jsx — 428 dòng,"use client",toàn bộ UI dashboard
+├── lib/
+│   └── supabase.ts           — tạo Supabase client từ env, ném lỗi khi thiếu env
+├── public/                    — file.svg,,globe.svg,,next.svg,,vercel.svg,,window.svg
+└── docs/
+    └── CODEBASE_OVERVIEW.md — tài liệu này
 ```
+**Không có:** `app/api/`, `app/actions/`, `middleware.ts`, `instrumentation.ts`, `i18n/locales`, monorepo, workspace con.
 
-Không có thư mục con nào. Cấu trúc thư mục thực tế trong môi trường làm việc:
-
-```
-/workspace/project/bia_fmcg/
-├── .git/           (shallow clone, 1 commit "first commit")
-└── README.md
-```
-
-**Ghi chú khảo sát:** Sau khi khảo sát, thư mục `docs/` đã được thêm vào để chứa tệp tài liệu này — đây là tệp tài liệu do khảo sát tạo ra, không phải mã ứng dụng.**
-
-**Suy luận:** Có khả năng cao đây là kho GitHub vừa được khởi tạo(`git init` + `git commit` + push lên GitHub) để chuẩn bị cho một ứng dụng; nhưng chưa có bất kỳ bằng chứng nào trong kho xác nhận điều đó.
-
-
-
-## 4. Các điểm khởi đầu (entry points) của ứng dụng
-
-**Đã xác nhận:** Không tồn tại bất kỳ điểm khởi đầu nào(không có tệp `main.*`, `index.*`, `app.*`, `manage.py`, `Dockerfile`, v.v.).**
-
-**Chưa biết:** Tiến trình, lệnh chạy, hoặc script khởi động của ứng dụng.
-
-
-
-## 5. Kiến trúc backend
-
-**Đã xác nhận:** Không có mã backend nào trong kho.**
-
-**Chưa biết:** Ngôn ngữ, framework, hoặc mô hình backend dự kiến.
-
-
-
-## 6. Kiến trúc frontend
-
-**Đã xác nhận:** Không có mã frontend nào trong kho.**
-
-**Chưa biết:** Framework, thư viện UI, hoặc quản lý trạng thái dự kiến.
-
-
-
-## 7. Lớp API
-
-**Đã xác nhận:** Không có mã, định nghĩa endpoint, hoặc tài liệu API nào trong kho.**
-
-**Chưa biết:** Kiểu API( REST/GraphQL/gRPC/…) sẽ được sử dụng.
-
-
-
-## 8. Cơ sở dữ liệu và cơ chế lưu trữ dữ liệu (persistence)
-
-**Đã xác nhận:** Không có sơ đồ dữ liệu, migration, seed, hoặc cấu hình kết nối cơ sở dữ liệu nào trong kho.**
-
-**Chưa biết:** Hệ quản trị DB, và chiến lược lưu trữ sẽ được dùng.
-
-
-
-## 9. Xác thực và phân quyền**
-
-**Đã xác nhận:** Không có mã hoặc cấu hình xác thực/phân quyền nào trong kho.**
-
-**Chưa biết:** Cơ chế đăng nhập, quản lý phiên, và phân quyền dự kiến.
-
-
-
-##10. Các tích hợp bên ngoài**
-
-**Đã xác nhận:** Không có mã hoặc cấu hình tích hợp bên ngoài nào trong kho.**
-
-**Chưa biết:** Các dịch vụ bên thứ ba(thanh toán, email, SMS, bản đồ, v.v.) dự kiến được tích hợp.
-
-
-
-##11. Các tác vụ chạy ngầm(background jobs) và worker**
-
-**Đã xác nhận:** Không có lịch trình, worker, hoặc tác vụ ngầm nào được định nghĩa trong kho.**
-
-**Chưa biết:** Có sử dụng hàng đợi(queue), cron, hoặc worker pool hay không.
-
-
-
-##12. Cấu hình và các biến môi trường**
-
-**Đã xác nhận:** Không có tệp cấu hình(`.env*`, `*.yml`, `*.yaml`, `*.toml`, `*.json` cấu hình, v.v.) hoặc tài liệu biến môi trường nào trong kho.**
-
-**Chưa biết:** Tên biến môi trường, hồ sơ cấu hình, và cơ chế quản lý cấu hình dự kiến.
-
-
-
-##13. Kiến trúc Docker/container**
-
-**Đã xác nhận:** Không có `Dockerfile`, `docker-compose*.yml`, `.dockerignore`, hoặc bất kỳ tệp container hóa nào trong kho.**
-
-**Chưa biết:** Chiến lược đóng gói, orchestration, và môi trường chạy dự kiến.
-
-
-
-## 14. Quy trình CI/CD**
-
-**Đã xác nhận:** Truy vấn GitHub Actions API trả về **0 workflow, 0 workflow run** cho kho`. Không có thư mục `.github/` trong cây tệp. Không có tệp cấu hình của bất kỳ hệ thống CI/CD bên ngoài nào khác(chẳng hạn `.gitlab-ci.yml`, `Jenkinsfile`, `azure-pipelines.yml`, `.circleci/`, `bitbucket-pipelines.yml`).**
-
-**Chưa biết:** Pipeline build/test/deploy dự kiến sẽ được thiết lập như thế nào.
-
-
-
-##15. Chiến lược kiểm thử(t testing**
-
-**Đã xác nhận:** Không có bài kiểm thử nào, khung kiểm thử nào(test framework), hoặc cấu hình kiểm thử nào trong kho.**
-
-**Chưa biết:** Chiến lược unit test, integration test, và E2E test dự kiến.
-
-
-
-##16. Ghi nhật ký(logging) và khả năng quan sát hệ thống(observability**
-
-**Đã xác nhận:** Không có mã ghi nhật ký, cấu hình quan sát hệ thống, hoặc tài liệu liên quan nào trong kho.**
-
-**Chưa biết:** Có triển khai log aggregation, metrics, hoặc tracing hay không.
-
-
-
-##17. Các thư viện/thành phần phụ thuộc chính**
-
-**Đã xác nhận:** Không có tệp khai báo phụ thuộc nào(manifest/lockfile) trong kho. Kho không khai báo bất kỳ thư viện nào.**
-
-**Chưa biết:** Các thư viện sẽ được sử dụng khi dự án bắt đầu.
-
-
-
-##18. Các rủi ro tiềm ẩn về kiến ​​trúc
+##4. Các điểm khởi đầu của ứng dụng
 
 **Đã xác nhận:**
-1. **Kho trống gần như hoàn toàn** — không có mã, tài liệu thiết kế, hoặc ràng buộc kiến trúc nào được thiết lập. Rủi ro duy nhất hiện hữu là mọi quyết định kiến trúc tương lai đều bắt đầu từ con số không.
+- Route duy nhất: `app/page.tsx` — server component mặc định cho `/`, hàm `export default async function Home()`.
 
-**Suy luận / Rủi ro dự báo(khi mã nguồn được thêm vào, cần lưu ý):**
-2. Thiếu tệp `AGENTS.md`/hướng dẫn đóng góp ngay từ đầu khiến các phiên làm việc tự động(như OpenHands) và cộng tác viên mới thiếu ngữ cảnh chuẩn về cách xây dựng/chạy dự án.
+- Layout gốc: `app/layout.tsx` — áp dụng toàn trang với metadata, fonts, CSS toàn cục.
 
-
-3. Nhánh `main` chưa được bảo vệ(GitHub API trả về `"protected": false`) và chỉ có một commit — rủi ro về quy trình khi nhiều người bắt đầu đóng góp.
-
-
-
-##19. Nợ kỹ thuật(technical debt**
-
-**Đã xác nhận:** Không có mã nguồn nên chưa tồn tại nợ kỹ thuật thực tế nào. Không có API deprecated, không có module cần tái cấu trúc, không có mã chết.
+- Scripts trong `package.json`: `npm run dev` — `next dev`; `npm run build` — `next build`; `npm start` — `next start`; `npm run lint` — `eslint`.
+- Điểm vào dữ liệu: `lib/supabase.ts` — hàm `getSupabaseClient()`.
 
 
 
-##20. Các khu vực nhạy cảm về bảo mật**
+##5. Kiến trúc backend
+
+**Đã xác nhận:** **Không có backend tùy chỉnh trong kho** — không có `app/api/`, không server actions, không framework backend độc lập, không mã Edge Function.Suppabase Edge Function không nằm trong repo này.
+
+
+
+- Data-flow duy nhất: server component `page.tsx` gọi Supabase trực tiếp bằng `getSupabaseClient()`, anon key công khai, kỳ vọng RLS chỉ đọc công khai.
+
+- Xử lý lỗi: khối `try/catch` trong `page.tsx`, lưu `fetchError` rồi truyền xuống UI hiển thị thông báo lỗi trên dashboard.áo
+
+**Suy luận:** Kiến trúc hiện tại là "server-rendered dashboard + Database-as-a-Service" kiểu BaaS với Supabase, chưa có business-logic tầng trung gian. Các `JOB 1–4` hiển thị trong UI là **mô tả tĩnh** — không có mã thực thi định kỳ nào trong repository.
+
+
+
+##6. Kiến trúc frontend
 
 **Đã xác nhận:**
-- Kho được đánh dấu **private** trên GitHub. - Không có bí mật(`secret`) nào, tệp `.env`, hoặc thông tin xác thực được commit trong kho(đã kiểm tra toàn bộ cây tệp: chỉ có `README.md`).
-- Đáng chú ý: URL remote của clone chứa token GitHub nhúng trong URL — đây là đặc điểm của môi trường khảo sát tự động, không phải của chính kho. Token này chưa bao giờ được ghi vào tệp nào trong kho.
- Token này, nếu hết hạn hoặc bị lộ ngoài môi trường, cần được thu hồi và thay thế ngay.
+- App Router với một server component và một client component lớn: `components/BeerFmcgIntelligenceOS.jsx` — 428 dòng, `"use client"`, quản lý tab bằng `useState` Domestic`.
+- **Không dùng thư viện UI, không state-management** — mọi style là inline CSS-in-JS thông qua object màu `C` và thuộc tính `style`; chuyển tab thủ công bằng biến `activeTab`. Tailwind v4 chỉ dùng qua `globals.css` với `@import "tailwindcss"` và CSS variables, không dùng class Tailwind trong JSX.á
+- Biểu đồ bằng **Recharts**: BarChart thị phần, LineChart dự báo,, AreaChart dịch chuyển kênh..
+- Fonts: **next/font/google** — Geist trong layout; Fraunces,, Inter,, IBM_Plex_Mono khai báo trong chính component client — tổng cộng thêm ba font Google, cân nhắc tác động hiệu năng.
+
+- **Accessibility** hạn chế: tab dùng `<button>` tốt, nhưng thiếu `role="tab"`, `aria-selected`, điều hướng bàn phím; `lang="en"` trong khi giao diện tiếng Việt.
+
+
+
+##7. Lớp API
+
+**Đã xác nhận:** Không có API do ứng dụng định nghĩa trong kho — REST, GraphQL, gRPC đều không hiện diện. Thay vào đó, dữ liệu đọc trực tiếp qua **Supabase client** — postgREST do Supabase cung cấp:
+
+- `market_alerts` — `select("*")`, order bởi `impact` giảm dần, rồi `urgency` giảm dần.
+
+- `market_brands` — `select("*")`, order bởi `market_share_volume` giảm dần.
+
+
+
+- `company_financials` — `select("*")`, order bởi `company_name` tăng dần tích.
+
+
+
+**Suy luận:** Schema Supabase được suy ra từ component: các cột như `brand_name`, `market_share_volume`, `alert_type`, `priority`, `title`, `details`, `strategic_action`, `impact`, `urgency`, `company_name`, `period`, `net_revenue_vnd_bn`, `yoy_revenue_growth_pct`, `ad_promo_expense_vnd_bn`, `is_full_year_target`, `is_latest_actual` — nhưng **không có trong repo để xác nhận**.
+
+
+
+##8. Cơ sở dữ liệu và cơ chế lưu trữ
+
+**Đã xác nhận:** Persistence duy nhất là **Supabase** — PostgreSQL qua `@supabase/supabase-js`. Không có migration SQL, không seed, không ORM trong kho. Quyền truy cập kỳ vọng: anon key công khai, RLS policy public-read chỉ cho SELECT như ghi chú trong `lib/supabase.ts`.
+
+**Chưa biết:** Cấu trúc bảng, migration history, RLS policy thực tế, seed data — toàn bộ nằm trong Supabase project ngoài repo, không thể xác minh từ đây.
+
+
+
+##9. Xác thực và phân quyền
+
+**Đã xác nhận:** **Không có mã xác thực hay phân quyền trong kho** — không login, không session, không middleware auth, không dùng Supabase Auth. Toàn bộ ứng dụng chạy công khai đọc bằng anon key.
+
+
+
+##10. Các tích hợp bên ngoài
+
+**Đã xác nhận:**
+- **Supabase** — tích hợp dữ liệu chính; dependency `@supabase/supabase-js`; cần hai biến môi trường.á
+- **Google Fonts** qua `next/font/google` — Geist trong layout;, Fraunces, Inter, IBM_Plex_Mono trong component..
+
+
+
+##11. Background jobs và worker
+
+**Đã xác nhận:** **Không có mã worker hay scheduled job trong kho**. UI hiển thị bốn mô tả "JOB" tĩnh — Market Alert mỗi 30 phút,, Daily Executive Brief lúc 07:00,, Weekly Market Review thứ Hai 07:30,, Monthly Board Report ngày mùng 1 lúc 08:00. Đây chỉ là nội dung hiển thị,, không kèm mã cron, edge function hay queue nào trong repository này.
+
+
+
+##12. Cấu hình và biến môi trường
+
+**Đã xác nhận:**
+- Hai biến môi trường bắt buộc — đọc từ `lib/supabase.ts`:
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- Không có tệp `.env`, `.env.example`, `.env.local` trong repo; không có mẫu cấu hình.
+
+- `next.config.ts` **rỗng** — không cấu hình env, images, redirects, headers hay CSP..
+
+
+
+##13. Kiến trúc Docker và container
+
+**Đã xác nhận:** **Không có `Dockerfile`, `docker-compose*`, `.dockerignore`** hay bất kỳ tệp container hóa nào trong kho. Kênh triển khai dự kiến là **Vercel** — README create-next-app hướng dẫn Vercel;, `lib/supabase.ts` ghi chú "Vercel Project Settings".
+
+
+
+##14. Quy trình CI/CD
+
+**Đã xác nhận:** **Không có workflow GitHub Actions** — GitHub Actions API trả về `total_count: 0`; không có thư mục `.github/`; không có cấu hình CI/CD bên ngoài nào như GitLab CI, Jenkins, Azure Pipelines. README dẫn tới Vercel deploy nhưng không có `vercel.json` hay cấu hình platform khác trong repo.
+
+
+
+##15. Chiến lược kiểm thử
+
+**Đã xác nhận:** **Không có bài kiểm thử nào** — không unit test, không integration test,, không E2E;, không test runner như vitest, jest, playwright, cypress;, không cấu hình coverage. Script `lint` là kiểm tra tĩnh duy nhất được khai báo.
+
+
+
+##16. Ghi nhật ký và khả năng quan sát
+
+**Đã xác nhận:** Chỉ có một `console.error("Lỗi tải dữ liệu từ Supabase:", err?.message ?? err)` trong `page.tsx` — log phía server, ra console runtime deploy. Không có logger cấu trúc,, không tracing,, không metrics,, không Sentry/OpenTelemetry,, không cấu hình Vercel Analytics hay Web Vitals.
+
+
+
+##17. Thư viện và phụ thuộc chính
+
+**Đã xác nhận** — `package.json` + `package-lock.json`:
+
+| Nhóm | Thư viện | Version |
+|---|---|---|
+| Framework | `next` | `16.2.10` |
+| UI | `react` + `react-dom` | `19.2.4` |
+| Chart | `recharts` | `3.9.2` |
+| Icons | `lucide-react` | `1.24.0` |
+| Data | `@supabase/supabase-js` | `^2.45.0` — ghi chú: thiếu trong lockfile |
+| Style | `tailwindcss` + `@tailwindcss/postcss` | `4.3.2` |
+| Lint | `eslint-config-next` + `eslint` | `16.2.10` + `9.39.5` |
+| Type | `typescript` | `5.9.3` |
+
+
+
+##18. Rủi ro tiềm ẩn về kiến trúc
+
+**Đã xác nhận:**
+1. **Lockfile không đồng bộ manifest** — `@supabase/supabase-js` có trong `package.json` nhưng vắng trong `package-lock.json`; `npm ci` có thể fail, phiên bản thực tế không bị khoá. Mức: cao
+2. **Thiếu `.gitignore`** — nguy cơ commit `node_modules`, `.next`, `.env*`, log — đặc biệt nhạy vì ứng dụng cần secret env. Mức: cao
+3. **Metadata và SEO mặc định** — `layout.tsx` giữ `title: "Create Next App"`, `description: "Generated by create next app"`, `lang="en"` trong khi sản phẩm là dashboard tiếng Việt — sai SEO và accessibility. Mức: trung bình
+4. **Một client component 428 dòng** — toàn bộ UI, màu sắc, mappers,, tabs,, charts trong một file `.jsx` không type — khó bảo trì, khó tái sử dụng.** Mức: trung bình
+5. **Dữ liệu tĩnh hardcode** — pricing matrix,, regions,, forecast,, channel shift,, market gaps,, jobs đều viết cứng trong component — không nguồn dữ liệu,, không cơ chế cập nhật. Mức: trung bình
+
+**Suy luận — rủi ro dự báo:**
+6. **RLS Supabase** — anon key công khai chỉ an toàn khi RLS policy đúng; nếu policy sai hoặc có nơi dùng service_role thì dữ liệu bị phơi. Mức: cao — chưa thể xác minh từ repo.
+
+7. **Toàn component client-side** — dù phần lớn là render tĩnh,, kéo theo JavaScript nặng phía trình duyệt. Mức: trung bình
+8. **`revalidate = 0` và `dynamic = "force-dynamic"`** — mọi request đều fetch lại Supabase, chưa có cache strategy cho dữ liệu bán tĩnh như thị phần, tài chính. Mức: thấp-trung bình
+
+
+
+##19. Nợ kỹ thuật
+
+**Đã xác nhận:**
+- Lockfile thiếu dependency Supabase — nợ kỹ thuật ngay từ đầu. Mức cao
+- README vẫn là mặc định `create-next-app`, dự án chỉ ghi dòng `# bia-fmcg` cuối tệp. Mức trung bình.
+- `AGENTS.md` và `CLAUDE.md` hiện tại chỉ chứa cảnh báo nextjs-agent-rules và tham chiếu — chưa có hướng dẫn build,, test,, env cho agent. Mức trung bình
+- Ép kiểu `any` trong `app/page.tsx` — `const BeerFmcgIntelligenceOS: any = ...` kèm comment giải thích workaround cho lỗi build trước đó — ranh giới kiểu dữ liệu chưa được thiết kế. Mức trung bình
+- Thiếu hoàn toàn test infrastructure — nợ tích lũy khi tính năng tăng. Mức cao dần
+- Hai hệ thống style song song — Tailwind v4 qua CSS variables và inline style qua object `C` — kém nhất quán. Mức thấp
+
+
+
+##20. Các khu vực nhạy cảm về bảo mật
+
+**Đã xác nhận:**
+- **Không có bí mật hardcode trong mã nguồn** — đã scan 19 tệp, không thấy key, token, URL Supabase cố định,, chuỗi `eyJ` hay `service_role` trong code.; từ khóa service_role chỉ xuất hiện trong bình luận `lib/supabase.ts` như cảnh báo "không dùng"".
+- **Secret là biến môi trường** — `NEXT_PUBLIC_SUPABASE_URL` và `NEXT_PUBLIC_SUPABASE_ANON_KEY`;; anon key là public key, an toàn khi ở client **chỉ khi RLS thực sự chặn write**; không có service_role trong code — tốt..
+- **Rủi ro phụ sinh từ thiếu `.gitignore`** — nếu commit sau vô tình thêm `.env*.local` hoặc `node_modules` sẽ lộ secret hoặc phình kho. Mức cao
+- **Repo private trên GitHub** — kiểm soát truy cập hiện tại ổn; nhưng nếu repo trở công khai, anon key Supabase lộ sẽ cho đọc dữ liệu nếu RLS sai.Mức cao
+- Không có CSP,, security headers,, rate limit — bề mặt tấn công hiện thấp vì app tĩnh + Supabase trực tiếp, nhưng không có lớp phòng thủ nếu dữ liệu nhạy cảm sau này.Mức thấp-trung bình
 
 
 
 ##21. Tổng kết và khuyến nghị
 
-**Đã xác nhận:**
-- `bia_fmcg` hiện là kho khởi tạo trống với một commit, một tệp README ít thông tin, không có CI/CD, không có mã, không có tài liệu kỹ thuật. - **Bước tiếp theo được khuyến nghị:** bổ sung README mô tả mục đích dự án, ngăn xếp công nghệ dự kiến, và cấu trúc thư mục; thêm tệp `.gitignore`; thêm `AGENTS.md`; thiết lập branch protection và GitHub Actions cơ bản khi mã nguồn bắt đầu được thêm vào.
+**Thang mức:** A — cần xử lý ngay;; B — nên xử lý sớm;; C — cải thiện khi có thời gian.
 
 
 
-##22. Các mục chưa biết/còn thiếu(cần bổ sung khi kho phát triển)
+| # | Khuyến nghị | Mức |
+|---|---|---|
+| 1 | Cho chạy `npm install` để đồng bộ lại `package-lock.json`, bổ sung `@supabase/supabase-js` và các dependency thiếu khác, rồi commit lockfile mới | A |
+| 2 | Thêm `.gitignore` — `node_modules`, `.next`, `.env*`, logs — trước commit tiếp theo | A |
+| 3 | Cập nhật metadata và SEO cho `app/layout.tsx` — title, description,, `lang="vi"` | B |
+| 4 | Xác minh Supabase RLS policy — chỉ SELECT công khai, chặn write bằng anon key | B |
+| 5 | Thêm `.env.example` liệt kê hai biến, không kèm giá trị thực | B |
+| 6 | Cá nhân hóa README — mục đích,, lệnh chạy,, biến env,, kiến trúc dữ liệu | B |
+| 7 | Xác định mô hình background jobs thực sự — Supabase Edge Functions hay cron ngoài repo — hiện chỉ là mô tả UI | B |
+| 8 | Chia nhỏ component 428 dòng, thêm type cho dữ liệu Supabase thay `any` | C |
+| 9 | Thêm tests — ít nhất unit test cho mappers và smoke render test; thêm CI GitHub Actions lint → typecheck → build | C |
+| 10 | Tách dữ liệu tĩnh pricing, regions,, forecast thành nguồn dữ liệu có cấu hình hay database | C |
+| 11 | Cân nhắc cache strategy cho dữ liệu bán tĩnh thay vì force-dynamic mọi request | C |
+| 12 | Cải thiện accessibility cho tab — role="tab",, aria-selected,, điều hướng bàn phím,, contrast,, focus states | C |
+
+##22. Thông tin chưa biết và còn thiếu
 
 | # | Mục | Tình trạng |
-|---|------|---------|
-| 1 | Mục đích/miêu tả nghiệp vụ chi tiết | Thiếu — README chỉ có tên dự án |
-| 2 | Ngăn xếp công nghệ dự kiến | Thiếu — GitHub báo `language: null` |
-| 3 | Cấu trúc thư mục mã nguồn | Thiếu — chưa có mã |
-| 4 | Điểm khởi đầu ứng dụng | Thiếu |
-| 5 | Thiết kế backend | Thiếu |
-| 6 | Thiết kế frontend | Thiếu |
-| 7 | Lớp API( REST/GraphQL/…, endpoint)| Thiếu |
-| 8 | Cơ sở dữ liệu và migration | Thiếu |
-| 9 | Cơ chế xác thực/phân quyền | Thiếu |
-| 10 | Tích hợp bên ngoài | Thiếu |
-| 11 | Background jobs / worker | Thiếu |
-| 12 | Biến môi trường và tệp cấu hình | Thiếu |
-| 13 | Docker / container hóa | Thiếu |
-| 14 | CI/CD | Thiếu — GitHub Actions: 0 workflow |
-| 15 | Chiến lược kiểm thử | Thiếu |
-| 16 | Logging / observability | Thiếu |
-| 17 | Danh sách phụ thuộc | Thiếu |
-| 18 | Bài kiểm thử | Thiếu |
-| 19 | Chính sách bảo mật bổ sung | Thiếu — chỉ mới là kho private |
+|---|---|---|
+| 1 | Mô tả nghiệp vụ và người dùng mục tiêu chính thức | Thiếu — suy diễn từ UI |
+| 2 | Schema, migration,, RLS policy,, seed data của Supabase | Thiếu — nằm ngoài repo |
+| 3 | Phiên bản Node.js,, npm yêu cầu | Thiếu |
+| 4 | Backend,, API routes,, server actions | Thiếu — chưa có |
+| 5 | Mã background job thực thi | Thiếu — chỉ mô tả tĩnh |
+| 6 | Tests và cấu hình test runner | Thiếu |
+| 7 | CI/CD pipeline | Thiếu — chưa có workflow |
+| 8 | Docker,, container hóa,, tệp deploy | Thiếu — dự kiến Vercel |
+| 9 | Logging tập trung,, metrics,, tracing | Thiếu |
+| 10 | Tài liệu data contract cho ba bảng Supabase | Thiếu |
+| 11 | `.env.example`,, tài liệu cấu hình deploy | Thiếu |
+| 12 | Chính sách bảo mật chi tiết — RLS audit,, CSP,, headers | Thiếu |
 
 ---
 
-*Tài liệu này được tạo bởi trợ lý AI(OpenHands) ở chế độ chỉ đọc khảo sát — không có hành vi ứng dụng nào bị thay đổi.*
+*Tài liệu này được tạo bởi trợ lý AI — OpenHands — trong phiên khảo sát chỉ đọc; không thay đổi bất kỳ mã ứng dụng nào. Mọi dữ liệu xác nhận được kiểm chứng từ commit `4427f00` và GitHub API.*
